@@ -1,0 +1,107 @@
+3dprint - continuation notes (2026-08-30)
+
+Current status:
+- Project is now past the initial setup stage and has a working Laravel + Docker + Filament base.
+- Docker environment:
+  - custom Docker setup exists
+  - local dev domain configured: 3dprint.local
+  - app/web/db containers are in use
+  - DB backup/restore script exists: scripts/db.sh
+- Core project docs:
+  - commands log: commands-log.md
+  - main plan: plan.md
+- Laravel / Filament:
+  - Filament is installed and initialized
+  - admin user was created
+  - admin panel provider exists at app/Providers/Filament/AdminPanelProvider.php
+- Domain model:
+  - models and migrations exist for:
+    - Project
+    - ProjectImage
+    - ProjectFile
+  - migrations were filled according to MVP domain structure
+  - models include relationships and fillable/casts
+- Public frontend:
+  - routes implemented for:
+    - /            -> home page
+    - /projekty    -> project list
+    - /projekty/{slug} -> project detail
+  - basic layout added with left navigation
+  - project detail page shows:
+    - title
+    - short description
+    - description
+    - image gallery section
+- Gallery / media:
+  - GLightbox was added on the frontend
+  - project detail page uses gallery anchors for lightbox
+  - public storage-based media paths are used
+  - image upload handling was refactored toward automatic generation
+- Filament admin:
+  - ProjectResource exists
+  - relation managers exist for:
+    - images
+    - files
+  - upload fields are currently present in relation managers
+  - sorting/reordering support was added for images/files
+- Automation / media handling:
+  - app/Support/ProjectMedia.php exists
+  - app/Observers/ProjectImageObserver.php exists
+  - app/Observers/ProjectFileObserver.php exists
+  - observers were introduced to automate media path handling
+  - intervention/image was added for image processing
+  - large/thumb generation for images is intended to be automatic
+- Seed data:
+  - DatabaseSeeder now creates a sample published project:
+    - slug: sample-bracket
+    - title: Sample Bracket
+  - this is meant for testing frontend pages and gallery flow
+
+Key decisions already agreed:
+- Monolith Laravel app, no separate API
+- Filament as CMS/admin
+- Trix for WYSIWYG
+- GLightbox for gallery lightbox
+- Local storage for files, future S3 migration prepared
+- No categories/tags in MVP
+- MVP language: English only
+- Single admin account at start
+- Image processing strategy:
+  - keep only derived large + thumb
+  - no original file stored
+  - WebP output
+  - large max 1200x900
+  - thumb square 300x300
+
+What has already been implemented:
+- Custom Docker setup and local dev domain
+- Laravel initialized
+- Filament installed and panel initialized
+- Admin user created
+- Domain migrations/models created
+- Public routes and layout created
+- Project list and detail pages created
+- Gallery/lightbox frontend wired
+- Sample project seed added
+- File/image media handling helpers and observers added
+- Filament CRUD for Project created
+- Filament relation managers for ProjectImage and ProjectFile created
+- Upload fields in panel changed from manual path entry to file uploads
+- Reordering support added for media lists
+
+Current implementation caveats / things to revisit:
+- The gallery upload flow still needs final polish so the form uses one input for image upload and the generated path columns remain backend-only.
+- It should be verified that the current observer/hook flow matches Filament relation manager save behavior.
+- Public project detail page should eventually show download links for files and print notes in separate sections.
+- Project list page can still be improved with thumbnails and publication date.
+- A cleanup pass may be needed for duplicate early migration files created during initial generator runs.
+- If needed, adjust plan.md to reflect completed vs in-progress items more precisely.
+
+Next recommended step:
+1) Finalize the image upload workflow in Filament so the user only uploads one image field and the app generates both large/thumb paths automatically.
+2) Confirm reordering works correctly in the relation managers.
+3) Finish the public project detail page with:
+   - print notes section
+   - files/download section
+   - possibly thumbnails on the project list
+4) Update plan.md with implementation progress/status markers.
