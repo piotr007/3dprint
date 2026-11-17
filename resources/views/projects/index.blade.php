@@ -8,17 +8,17 @@
 
         <div class="grid gap-4">
             @forelse ($projects as $project)
-                <a href="{{ route('projects.show', $project) }}" class="rounded border bg-white p-4 hover:border-amber-400">
+                <a href="{{ route('projects.show', $project) }}" class="rounded border border-gray-200 bg-white p-4 hover:border-amber-400 dark:border-gray-800 dark:bg-gray-900">
                     @if ($project->featuredImage)
                         <img src="{{ asset('storage/' . $project->featuredImage->path_thumb) }}" alt="{{ $project->title }}" class="mb-3 h-40 w-full rounded object-cover">
                     @elseif ($project->images->isNotEmpty())
                         <img src="{{ asset('storage/' . $project->images->first()->path_thumb) }}" alt="{{ $project->title }}" class="mb-3 h-40 w-full rounded object-cover">
                     @endif
                     <div class="text-lg font-semibold">{{ $project->title }}</div>
-                    <div class="mt-1 text-sm text-gray-600">{{ $project->short_description }}</div>
+                    <div class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ $project->short_description }}</div>
                 </a>
             @empty
-                <div class="rounded border bg-white p-4 text-gray-600">No published projects yet.</div>
+                <div class="rounded border border-gray-200 bg-white p-4 text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">No published projects yet.</div>
             @endforelse
         </div>
     </div>

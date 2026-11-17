@@ -7,10 +7,12 @@
 - Logowanie administratora oparte o standardowy mechanizm Laravel.
 
 ## 2) Zasady pracy i artefakty
+- Srodowisko lokalne (2026-11-09): zamiast planowanego Docker CE uzytkownik zainstalowal `docker.io` i stary `docker-compose` z repozytorium Ubuntu. Potwierdzono brak pluginu `docker compose`; do wykonania instalacja `docker-compose-v2` oraz dodanie uzytkownika do grupy `docker` i ponowne logowanie. Agent nie ma dostepu do `sudo` bez hasla. Odtworzenie danych po migracji nie zostalo zweryfikowane.
 - Ustalenia projektowe zapisujemy na bieżąco w tym pliku.
 - Podczas implementacji prowadzimy osobny dziennik kluczowych komend (z krótkim komentarzem), proponowana lokalizacja:
   - `/media/ps/PS_M2/GitHub/3dprint/commands-log.md`
 - Implementacje JS w projekcie zawierają krótki komentarz wyjaśniający działanie.
+- Pełna dokumentacja przekazaniowa dla agentów AI (architektura, środowisko, model, pipeline mediów, pułapki, blueprint portfolio fotograficznego, snapshot kodu): `docs/ai-handover/` (start: `docs/ai-handover/README.md`). Załącznik z kodem regeneruje `docs/ai-handover/generate-code-appendix.sh`.
 
 ## 3) Architektura i technologie (propozycja robocza)
 - Backend: Laravel (aktualna stabilna wersja na moment startu).
@@ -89,14 +91,18 @@
   - lokalny host development: `3dprint.local`.
 
 ## 9) Backup i restore bazy (plan)
-- Skrypt shell (np. `scripts/db.sh`) z trybami:
-  - `backup` -> zapis dumpa SQL z timestampem,
-  - `restore <plik.sql>` -> odtworzenie bazy lokalnej.
-- Lokalizacja dumpów:
-  - `./backups/mysql/`
-- Wymagania:
-  - korzystanie z kontenera `db` przez `docker compose exec`,
-  - krótkie komunikaty i walidacja parametrów wejściowych.
+- `scripts/db.sh` udostępnia menu:
+  - backup i restore lokalnej bazy,
+  - backup i restore produkcyjnej bazy.
+- Ustawienia lokalne pochodzą z `.env` i kontenera MySQL Compose; ustawienia
+  produkcyjne są bezpiecznie parsowane z `.env.prod` przez bibliotekę Dotenv.
+  Skrypt nie wykonuje plików środowiskowych jako kodu powłoki.
+- Kopie trafiają do `backups/mysql/local/` lub `backups/mysql/production/`;
+  stare pliki `backup_*.sql` w `backups/mysql/` są nadal widoczne jako lokalne.
+- Restore wybiera kopię, a następnie usuwa istniejące tabele/widoki i odtwarza
+  wybraną kopię. Wymaga potwierdzenia, a dodatkowo wpisania `RESTORE LOCAL`
+  albo `RESTORE PRODUCTION`; produkcyjne opcje są wyróżnione kolorem.
+- Media w `storage/app/public/` nie są częścią backupu bazy i wymagają osobnej kopii.
 
 ## 10) Bezpieczeństwo i jakość (MVP)
 - Walidacja uploadów (typ, rozmiar, liczba).
@@ -108,11 +114,12 @@
 1. Setup repo aplikacji Laravel + Docker + uruchomienie lokalne. **(zrobione)**
 2. Konfiguracja auth/admin i struktury bazy (migracje + modele). **(zrobione)**
 3. Publiczny layout + strony + nawigacja. **(zrobione)**
-4. CMS: CRUD projektów, zdjęć i plików. **(w trakcie)**
-5. Obróbka obrazów i galeria z powiększeniem. **(w trakcie)**
+4. CMS: CRUD projektów, zdjęć i plików. **(zrobione)**
+5. Obróbka obrazów i galeria z powiększeniem. **(częściowo zrobione: galeria działa; obróbka obrazów pozostaje dodatkiem)**
 6. Skrypt backup/restore bazy. **(zrobione)**
-7. Dopracowanie UX, seed testowy, porządki migracji. **(w trakcie)**
-8. Poczta (Mailpit w dev), reset hasła e-mailem i 2FA (TOTP + e-mail) przez wbudowane MFA Filamenta; usunięte własne trasy `/login`, `/logout`. **(zrobione)**
+7. Dopracowanie UX, seed testowy, porządki migracji. **(zrobione w podstawowym zakresie)**
+8. Pakowanie release produkcyjnego: `.env.prod` jako `.env`, `vendor` instalowany z locka bez zaleznosci dev, assety Vite budowane w jednorazowym kontenerze; po buildzie opcjonalny upload zwyklym FTP na porcie 21. Niezaszyfrowany transfer wymaga dodatkowego wpisania `PLAIN FTP`; zdalne `.env` i dane `storage/` sa zachowywane, a brakujace katalogi runtime tworzone. Skrypt przypomina o recznej aktualizacji `.env` przez cPanel HTTPS. **(skonfigurowane; zalecane przejscie na FTPS/SFTP, gdy bedzie dostepne)**
+9. Poczta (Mailpit w dev), reset hasła e-mailem i 2FA (TOTP + e-mail) przez wbudowane MFA Filamenta; usunięte własne trasy `/login`, `/logout`. **(zrobione)**
 
 ## 12) Pytania otwarte do doprecyzowania
 1. CMS: **Filament** (wybrane).
@@ -122,3 +129,26 @@
 5. Kategorie/tagi: **nie w MVP** (wybrane).
 6. Język MVP: **tylko angielski** (wybrane).
 7. 2FA: **wbudowane MFA Filamenta — aplikacja TOTP z kodami odzyskiwania + kody e-mail, włączane per konto w profilu (`/admin/profile`)** (wybrane).
+
+## 13) Plan dodatków i ulepszeń
+
+Podstawowy zakres projektu jest zakończony. Poniższe pozycje są dalszym
+rozwojem i nie blokują działania obecnej strony. Kolejność jest wstępna;
+pracujemy nad nimi etapami.
+
+1. **Tryb ciemny** — przełącznik w prawym górnym rogu, domyślne dopasowanie
+   do ustawień systemu i zapamiętywanie ręcznego wyboru w przeglądarce.
+   **(w trakcie)**
+2. **Przetwarzanie zdjęć** — generowanie WebP: duży obraz do 1200×900 i
+   kwadratowa miniatura 300×300; podmiana istniejących kopii i zachowanie
+   czyszczenia plików przez observery. **(do zrobienia)**
+3. **Edycja treści** — zastąpienie zwykłych pól opisu i notatek edytorem
+   WYSIWYG, z zachowaniem bezpiecznego wyświetlania treści. **(do zrobienia)**
+4. **Strona główna** — uzupełnienie o docelową sekcję hero i możliwość
+   edycji jej treści z panelu. **(do zrobienia)**
+5. **Dostępność i dopracowanie interfejsu** — przegląd kontrastu, obsługi
+   klawiaturą, stanów focus i zachowania na małych ekranach.
+   **(do zrobienia)**
+6. **Przygotowanie do S3** — weryfikacja konfiguracji dysków i przepływu
+   mediów z zewnętrznym storage bez zmiany obecnego lokalnego storage.
+   **(do zrobienia)**

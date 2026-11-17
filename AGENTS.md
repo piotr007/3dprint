@@ -2,6 +2,8 @@
 
 Portfolio site for 3D-printing projects: public gallery + Filament admin panel (CMS).
 Full project plan and decisions (in Polish): `plan.md`. Operational command log: `commands-log.md`.
+In-depth handover docs (PL; architecture, environment, domain, media pipeline, Filament 5 notes,
+troubleshooting, photo-portfolio blueprint, full code snapshot): `docs/ai-handover/README.md`.
 
 ## Tech stack
 
@@ -23,7 +25,8 @@ docker compose up -d                              # start
 docker compose exec app php artisan migrate       # migrations
 docker compose exec app php artisan db:seed       # idempotent seed (updateOrCreate)
 docker compose exec app php artisan tinker        # REPL for debugging
-npm run build                                     # Vite build (required, host needs Node 18+)
+docker compose exec app npm run build             # Vite build (rebuild app image for Node 22)
+./deploy-package.sh                              # production FTP ZIP; Docker-only build tools
 ./scripts/db.sh backup                            # DB dump -> backups/mysql/
 ./scripts/db.sh restore <file.sql>                # DB restore
 ./zip-project.sh                                  # zip project to parent dir (excludes vendor/storage/node_modules)
